@@ -1494,6 +1494,31 @@ win_found:
   }
 }
 
+/// Put a safe autocommand event on the queue, to be triggered at a safe time.
+///
+/// @param event event that occurred
+/// @param fname filename, NULL or empty means use actual file name
+/// @param fname_io filename to use for <afile> on cmdline,
+///                 NULL means use `fname`.
+/// @param group autocmd group ID or AUGROUP_ALL
+/// @param buf Buffer for <abuf>
+/// @param eap Ex command arguments
+///
+/// @return true if some commands were executed.
+void queue_safe_autocommand(event_T event, char *fname, char *fname_io, int group, buf_T *buf,
+                            exarg_T *eap, Object *data)
+{
+  SafeAutocommandEvent *evdata = xmalloc(sizeof(SafeAutocommandEvent));
+  evdata->event = event;
+  evdata->fname = fname;
+  evdata->fname_io = fname_io;
+  evdata->group = group;
+  evdata->buf = buf->handle;
+  evdata->eap = eap;
+  evdata->data = data;
+  multiqueue_put(safe_autocmd_events, safe_autocmd_event, evdata);
+}
+
 /// Execute a safe autocommand event
 void safe_autocmd_event(void **argv)
 {
